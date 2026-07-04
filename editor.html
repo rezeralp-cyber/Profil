@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Editor Posting - LUUNASTORE</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a15; min-height: 100vh; padding: 0 0 60px; color: #fff; }
+    .header { background: linear-gradient(135deg, #0d1b4b, #1a1a6e); text-align: center; padding: 24px 20px 20px; border-bottom: 2px solid #2a3a8a; }
+    .header h1 { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: 1px; }
+    .header p { color: #60a5fa; font-size: 12px; margin-top: 4px; }
+    .tabs { display: flex; background: #0f0f20; border-bottom: 1px solid #1e1e3a; }
+    .tab { flex: 1; padding: 14px 8px; text-align: center; font-size: 12px; font-weight: 700; color: #4a4a7a; cursor: pointer; border-bottom: 3px solid transparent; transition: all .2s; }
+    .tab.active { color: #60a5fa; border-bottom-color: #3b82f6; background: #131328; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .wrap { padding: 20px 16px; max-width: 500px; margin: 0 auto; }
+    .sec-title { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #60a5fa; margin: 18px 0 12px; display: flex; align-items: center; gap: 8px; }
+    .sec-title::after { content:''; flex:1; height:1px; background:#1a1a35; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 700; color: #93c5fd; margin-bottom: 6px; }
+    .field input[type=text] { width: 100%; padding: 12px 14px; background: #131328; border: 1.5px solid #1e1e3a; border-radius: 10px; color: #fff; font-size: 14px; font-family: inherit; outline: none; transition: border-color .2s; }
+    .field input:focus { border-color: #3b82f6; }
+    .field input::placeholder { color: #2a2a4a; }
+    .upload-zone { border: 2px dashed #1e1e3a; border-radius: 14px; padding: 24px; text-align: center; cursor: pointer; transition: border-color .2s; background: #0f0f20; }
+    .upload-zone:hover { border-color: #3b82f6; }
+    .upload-zone input { display: none; }
+    .uicon { font-size: 32px; margin-bottom: 8px; }
+    .utxt { font-size: 13px; color: #4a4a7a; }
+    .utxt span { color: #3b82f6; font-weight: 700; }
+    .preview-grid { display: grid; gap: 4px; margin-top: 14px; border-radius: 10px; overflow: hidden; }
+    .preview-grid .thumb { aspect-ratio: 1; overflow: hidden; position: relative; background: #0f0f20; }
+    .preview-grid .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .preview-grid .thumb .del { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,.7); color: #fff; font-size: 12px; cursor: pointer; display: grid; place-items: center; font-weight: 700; }
+    .single-upload { border: 2px dashed #1e1e3a; border-radius: 12px; overflow: hidden; cursor: pointer; min-height: 120px; display: flex; align-items: center; justify-content: center; background: #0f0f20; transition: border-color .2s; }
+    .single-upload:hover { border-color: #3b82f6; }
+    .single-upload input { display: none; }
+    .single-upload img { width: 100%; display: block; }
+    .single-upload .placeholder { text-align: center; color: #2a2a4a; padding: 20px; }
+    .color-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .color-chip { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: border-color .2s; flex-shrink: 0; }
+    .color-chip.selected { border-color: #fff; }
+    .radio-chip { padding: 8px 14px; background: #131328; border: 1.5px solid #1e1e3a; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 600; color: #4a4a7a; user-select: none; transition: all .2s; }
+    .radio-chip.selected { border-color: #3b82f6; color: #93c5fd; background: rgba(59,130,246,.15); }
+    .gen-btn { width: 100%; padding: 15px; margin-top: 14px; background: linear-gradient(135deg, #1d4ed8, #4f46e5); border: none; border-radius: 13px; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; }
+    .dl-btn { width: 100%; padding: 14px; margin-top: 10px; background: #065f46; border: none; border-radius: 13px; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; display: none; }
+    canvas { display: none; width: 100%; border-radius: 12px; margin-top: 14px; }
+    .hint { font-size: 11px; color: #2a2a5a; margin-top: 6px; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #22c55e; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 13px; transition: transform .3s; z-index: 999; white-space: nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1>🎨 EDITOR POSTING</h1>
+  <p>LUUNASTORE • Collage & Auto Template</p>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('collage',this)">🖼️ Collage Grid</div>
+  <div class="tab" onclick="switchTab('template',this)">✨ Auto Template</div>
+</div>
+
+<!-- COLLAGE -->
+<div class="tab-content active" id="tab-collage">
+  <div class="wrap">
+    <div class="sec-title">Upload Foto</div>
+    <div class="upload-zone" onclick="document.getElementById('collage-input').click()">
+      <input type="file" id="collage-input" accept="image/*" multiple onchange="addCollageImages(event)"/>
+      <div class="uicon">📁</div>
+      <div class="utxt">Tap untuk upload foto<br><span>Bisa pilih banyak sekaligus (max 24)</span></div>
+    </div>
+    <p class="hint">Selalu 2 foto per collage — 4 foto = 2 collage, 8 foto = 4 collage, dst</p>
+    <div id="collage-preview" class="preview-grid" style="display:none;"></div>
+    <div class="field" style="margin-top:16px;">
+      <label>Warna Background</label>
+      <div class="color-row" id="bg-colors">
+        <div class="color-chip selected" style="background:#000" onclick="pickBg('#000',this)"></div>
+        <div class="color-chip" style="background:#fff" onclick="pickBg('#fff',this)"></div>
+        <div class="color-chip" style="background:#1a1a2e" onclick="pickBg('#1a1a2e',this)"></div>
+        <div class="color-chip" style="background:#4b6cb7" onclick="pickBg('#4b6cb7',this)"></div>
+        <div class="color-chip" style="background:#c471ed" onclick="pickBg('#c471ed',this)"></div>
+        <div class="color-chip" style="background:#f7971e" onclick="pickBg('#f7971e',this)"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Gap / Jarak antar foto</label>
+      <div class="color-row">
+        <div class="radio-chip selected" onclick="pickGap(0,this)">Tidak ada</div>
+        <div class="radio-chip" onclick="pickGap(8,this)">Kecil</div>
+        <div class="radio-chip" onclick="pickGap(16,this)">Sedang</div>
+      </div>
+    </div>
+    <button class="gen-btn" onclick="generateCollage()">🖼️ Generate Collage</button>
+    <canvas id="collage-canvas"></canvas>
+    <button class="dl-btn" id="dl-collage" onclick="downloadCanvas('collage-canvas','collage-luunastore.jpg')">⬇️ Download Collage</button>
+    <div id="collage-results" style="display:none;"></div>
+    <div id="collage-results" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- TEMPLATE -->
+<div class="tab-content" id="tab-template">
+  <div class="wrap">
+    <div class="sec-title">Foto Akun / Produk</div>
+    <div class="single-upload" onclick="document.getElementById('tmpl-img').click()">
+      <input type="file" id="tmpl-img" accept="image/*" onchange="previewTmpl(event)"/>
+      <div class="placeholder" id="tmpl-placeholder">
+        <div class="uicon">🖼️</div>
+        <div class="utxt" style="font-size:12px;">Tap upload foto akun</div>
+      </div>
+      <img id="tmpl-preview-img" style="display:none;"/>
+    </div>
+    <div class="sec-title">Info Posting</div>
+    <div class="field"><label>Harga</label><input type="text" id="tmpl-harga" placeholder="Contoh: 120k"/></div>
+    <div class="field"><label>Nama Store</label><input type="text" id="tmpl-store" value="LUUNASTORE.IN"/></div>
+    <div class="field"><label>Tagline</label><input type="text" id="tmpl-tagline" value="Trusted store spesialis jual beli"/></div>
+    <div class="field"><label>Nomor WA</label><input type="text" id="tmpl-wa" value="082123154354"/></div>
+    <div class="field"><label>Instagram</label><input type="text" id="tmpl-ig" value="@Luunastore.in"/></div>
+    <div class="field">
+      <label>Warna Teks Harga</label>
+      <div class="color-row" id="harga-colors">
+        <div class="color-chip selected" style="background:#fff" onclick="pickHargaColor('#fff',this)"></div>
+        <div class="color-chip" style="background:#facc15" onclick="pickHargaColor('#facc15',this)"></div>
+        <div class="color-chip" style="background:#f472b6" onclick="pickHargaColor('#f472b6',this)"></div>
+        <div class="color-chip" style="background:#34d399" onclick="pickHargaColor('#34d399',this)"></div>
+        <div class="color-chip" style="background:#60a5fa" onclick="pickHargaColor('#60a5fa',this)"></div>
+      </div>
+    </div>
+    <button class="gen-btn" onclick="generateTemplate()">✨ Generate Template</button>
+    <canvas id="tmpl-canvas"></canvas>
+    <button class="dl-btn" id="dl-tmpl" onclick="downloadCanvas('tmpl-canvas','posting-luunastore.jpg')">⬇️ Download Gambar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var collageFiles = [];
+  var bgColor = '#000';
+  var gapSize = 0;
+  var tmplImgObj = null;
+  var hargaColor = '#fff';
+
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
+    el.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 2500);
+  }
+
+  function downloadCanvas(id, fname) {
+    var c = document.getElementById(id);
+    var a = document.createElement('a');
+    a.href = c.toDataURL('image/jpeg', 0.92);
+    a.download = fname; a.click();
+  }
+
+  function loadImg(file) {
+    return new Promise(function(res) {
+      var r = new FileReader();
+      r.onload = function(e) {
+        var i = new Image();
+        i.onload = function(){ res(i); };
+        i.src = e.target.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }
+
+  function addCollageImages(e) {
+    var files = Array.from(e.target.files);
+    collageFiles = collageFiles.concat(files).slice(0,24);
+    renderCollagePreview();
+    // Reset hasil sebelumnya
+    var wr = document.getElementById('collage-results');
+    if (wr) { wr.innerHTML=''; wr.style.display='none'; }
+    document.getElementById('collage-canvas').style.display='none';
+    document.getElementById('dl-collage').style.display='none';
+    e.target.value = '';
+  }
+
+  function getGrid(n) {
+    if (n === 1) return {cols:1, rows:1};
+    if (n === 2) return {cols:1, rows:2};
+    if (n <= 4)  return {cols:2, rows:2};
+    if (n <= 6)  return {cols:3, rows:2};
+    if (n <= 9)  return {cols:3, rows:3};
+    return {cols:4, rows:3};
+  }
+
+  function renderCollagePreview() {
+    var grid = document.getElementById('collage-preview');
+    if (!collageFiles.length) { grid.style.display='none'; return; }
+    var g = getGrid(collageFiles.length);
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat('+g.cols+', 1fr)';
+    grid.innerHTML = '';
+    collageFiles.forEach(function(f,i) {
+      var div = document.createElement('div'); div.className = 'thumb';
+      var img = document.createElement('img'); img.src = URL.createObjectURL(f);
+      var del = document.createElement('div'); del.className='del'; del.textContent='x';
+      del.onclick = (function(idx){ return function(){ collageFiles.splice(idx,1); renderCollagePreview(); }; })(i);
+      div.appendChild(img); div.appendChild(del); grid.appendChild(div);
+    });
+  }
+
+  function pickBg(c,el){ bgColor=c; document.querySelectorAll('#bg-colors .color-chip').forEach(function(x){x.classList.remove('selected');}); el.classList.add('selected'); }
+  function pickGap(s,el){ gapSize=s; document.querySelectorAll('.radio-chip').forEach(function(x){x.classList.remove('selected');}); el.classList.add('selected'); }
+  function pickHargaColor(c,el){ hargaColor=c; document.querySelectorAll('#harga-colors .color-chip').forEach(function(x){x.classList.remove('selected');}); el.classList.add('selected'); }
+
+  // Render satu collage dari array imgs ke canvas element
+  function renderOneCollage(canvas, imgs, gr, g) {
+    var SIDE = 1080;
+    var totalGapX = g * (gr.cols + 1);
+    var totalGapY = g * (gr.rows + 1);
+    var cellW = Math.floor((SIDE - totalGapX) / gr.cols);
+    var cellH = Math.floor((SIDE - totalGapY) / gr.rows);
+    canvas.width = SIDE; canvas.height = SIDE;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0,0,SIDE,SIDE);
+    imgs.forEach(function(img,i) {
+      var col = i % gr.cols;
+      var row = Math.floor(i / gr.cols);
+      var x = g + col*(cellW+g);
+      var y = g + row*(cellH+g);
+      var scaleW = cellW / img.width;
+      var scaleH = cellH / img.height;
+      var scale = Math.max(scaleW, scaleH);
+      var sw = img.width * scale;
+      var sh = img.height * scale;
+      var ox = (sw - cellW) / 2;
+      var oy = (sh - cellH) / 2;
+      ctx.save();
+      ctx.beginPath(); ctx.rect(x,y,cellW,cellH); ctx.clip();
+      ctx.drawImage(img, x-ox, y-oy, sw, sh);
+      ctx.restore();
+    });
+  }
+
+  function generateCollage() {
+    if (!collageFiles.length) { showToast('Upload foto dulu!'); return; }
+    showToast('Generating...');
+
+    // Selalu 2 foto per collage
+    var PER = 2;
+    var gr = { cols:1, rows:2 };
+    var g = gapSize;
+
+    Promise.all(collageFiles.map(function(f){ return loadImg(f); })).then(function(imgs) {
+      // Bagi jadi grup 2
+      var groups = [];
+      for (var i = 0; i < imgs.length; i += PER) {
+        groups.push(imgs.slice(i, i+PER));
+      }
+
+      var wrap = document.getElementById('collage-results');
+      wrap.innerHTML = '';
+      wrap.style.display = 'block';
+      document.getElementById('collage-canvas').style.display = 'none';
+      document.getElementById('dl-collage').style.display = 'none';
+
+      // Jika hanya 1 grup dan 1 foto, pakai grid 1x1
+      groups.forEach(function(group, idx) {
+        var localGr = group.length === 1 ? {cols:1,rows:1} : gr;
+
+        var wrapper = document.createElement('div');
+        wrapper.style.cssText = 'margin-bottom:12px;';
+
+        var label = document.createElement('div');
+        label.style.cssText = 'font-size:11px;color:#4a4a7a;font-weight:700;margin-bottom:6px;';
+        label.textContent = 'Collage ' + (idx+1) + ' / ' + groups.length;
+        wrapper.appendChild(label);
+
+        var canvas = document.createElement('canvas');
+        canvas.style.cssText = 'width:100%;border-radius:12px;display:block;';
+        renderOneCollage(canvas, group, localGr, g);
+        wrapper.appendChild(canvas);
+
+        var dlBtn = document.createElement('button');
+        dlBtn.className = 'dl-btn';
+        dlBtn.style.display = 'block';
+        dlBtn.style.marginTop = '8px';
+        dlBtn.textContent = '⬇️ Download Collage ' + (idx+1);
+        dlBtn.onclick = (function(c, i2){ return function(){ downloadFromCanvas(c, 'collage-'+(i2+1)+'-luunastore.jpg'); }; })(canvas, idx);
+        wrapper.appendChild(dlBtn);
+
+        wrap.appendChild(wrapper);
+      });
+
+      // Tombol download semua
+      if (groups.length > 1) {
+        var allBtn = document.createElement('button');
+        allBtn.className = 'gen-btn';
+        allBtn.style.marginTop = '4px';
+        allBtn.textContent = '⬇️ Download Semua (' + groups.length + ' Collage)';
+        allBtn.onclick = function() {
+          wrap.querySelectorAll('canvas').forEach(function(c, i) {
+            setTimeout(function(){ downloadFromCanvas(c, 'collage-'+(i+1)+'-luunastore.jpg'); }, i*500);
+          });
+        };
+        wrap.appendChild(allBtn);
+      }
+
+      showToast('✅ ' + groups.length + ' collage siap!');
+    });
+  }
+
+  function downloadFromCanvas(canvas, fname) {
+    var a = document.createElement('a');
+    a.href = canvas.toDataURL('image/jpeg', 0.92);
+    a.download = fname; a.click();
+  }
+
+  function previewTmpl(e) {
+    var file = e.target.files[0]; if (!file) return;
+    document.getElementById('tmpl-placeholder').style.display='none';
+    var pi = document.getElementById('tmpl-preview-img');
+    pi.style.display='block'; pi.src=URL.createObjectURL(file);
+    loadImg(file).then(function(img){ tmplImgObj=img; });
+  }
+
+  function roundRect(ctx,x,y,w,h,r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();
+  }
+
+  function generateTemplate() {
+    if (!tmplImgObj) { showToast('Upload foto dulu!'); return; }
+    var harga = document.getElementById('tmpl-harga').value.trim();
+    if (!harga) { showToast('Isi harga dulu!'); return; }
+    var store   = document.getElementById('tmpl-store').value.trim() || 'LUUNASTORE.IN';
+    var tagline = document.getElementById('tmpl-tagline').value.trim();
+    var wa      = document.getElementById('tmpl-wa').value.trim();
+    var ig      = document.getElementById('tmpl-ig').value.trim();
+
+    showToast('Generating...');
+
+    var S = 1080;
+    var HEADER_H = 210;
+    var FOOTER_H = 220; // WA/IG/swipe area
+    var PHOTO_AREA = S - HEADER_H - FOOTER_H; // sisa untuk foto + kotak harga
+
+    // Hitung tinggi foto: foto full tanpa crop (contain)
+    var img = tmplImgObj;
+    var PAD = 20;
+    var photoW = S - PAD*2;
+    var scaleContain = photoW / img.width;
+    var photoH = img.height * scaleContain;
+    // Batasi max photoH agar tidak melebihi area
+    var maxPhotoH = PHOTO_AREA - 10;
+    if (photoH > maxPhotoH) {
+      scaleContain = maxPhotoH / img.height;
+      photoH = maxPhotoH;
+    }
+    var photoActualW = img.width * scaleContain;
+
+    // Canvas total tinggi = header + foto + kotak harga + footer
+    var HARGA_FONT = 108;
+    var canvas = document.getElementById('tmpl-canvas');
+
+    // Ukur lebar teks harga dulu
+    var tmpC = document.createElement('canvas');
+    tmpC.width=1200; tmpC.height=200;
+    var tmpCtx = tmpC.getContext('2d');
+    tmpCtx.font = 'bold '+HARGA_FONT+'px Arial';
+    var hargaW = tmpCtx.measureText(harga).width;
+    var BW = Math.min(S - PAD*2, hargaW + 120); // kotak pas + padding
+    var BH = HARGA_FONT + 60;
+
+    var totalH = HEADER_H + Math.round(photoH) + BH + 30 + FOOTER_H;
+    canvas.width = S;
+    canvas.height = totalH;
+    var ctx = canvas.getContext('2d');
+
+    // BG
+    var bgG = ctx.createLinearGradient(0,0,S,totalH);
+    bgG.addColorStop(0,'#5b8dd9'); bgG.addColorStop(1,'#3a6ab0');
+    ctx.fillStyle = bgG; ctx.fillRect(0,0,S,totalH);
+
+    // Diagonal strip
+    ctx.save(); ctx.globalAlpha=0.18; ctx.fillStyle='#7aaee8';
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(320,0); ctx.lineTo(0,320); ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    // Gelombang kanan atas
+    ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.55)'; ctx.lineWidth=5; ctx.lineCap='round';
+    for (var wi=0;wi<3;wi++){
+      ctx.beginPath();
+      ctx.moveTo(S-180,50+wi*22);
+      ctx.bezierCurveTo(S-150,30+wi*22,S-120,70+wi*22,S-90,50+wi*22);
+      ctx.bezierCurveTo(S-60,30+wi*22,S-30,70+wi*22,S-5,50+wi*22);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Gelombang kiri bawah
+    ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.55)'; ctx.lineWidth=5; ctx.lineCap='round';
+    var gy = totalH - 120;
+    for (var wi2=0;wi2<3;wi2++){
+      ctx.beginPath();
+      ctx.moveTo(5,gy+wi2*22);
+      ctx.bezierCurveTo(35,gy-20+wi2*22,65,gy+20+wi2*22,95,gy+wi2*22);
+      ctx.bezierCurveTo(125,gy-20+wi2*22,155,gy+20+wi2*22,185,gy+wi2*22);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Bintang
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    [[S-55,170,5],[S-85,205,3],[S-35,215,4],[75,totalH-170,5],[45,totalH-200,3],[85,totalH-185,4]].forEach(function(s){
+      ctx.beginPath(); ctx.arc(s[0],s[1],s[2],0,Math.PI*2); ctx.fill();
+    });
+
+    // Header
+    ctx.textAlign='center';
+    ctx.fillStyle='#fff';
+    ctx.shadowColor='rgba(0,0,0,0.3)'; ctx.shadowBlur=10;
+    ctx.font='bold 86px Arial'; ctx.fillText(store,S/2,114);
+    ctx.font='bold 42px Arial'; ctx.fillText(tagline,S/2,178);
+    ctx.shadowBlur=0;
+
+    // Foto — contain, tidak crop, center horizontal
+    var photoY = HEADER_H + 10;
+    var photoX = PAD + (photoW - photoActualW)/2;
+    ctx.save();
+    roundRect(ctx, PAD, photoY, photoW, photoH, 14);
+    ctx.clip();
+    // Fill bg foto biar tidak ada gap putih
+    ctx.fillStyle='#0a1030'; ctx.fillRect(PAD,photoY,photoW,photoH);
+    ctx.drawImage(img, photoX, photoY, photoActualW, photoH);
+    ctx.restore();
+
+    // Kotak harga — lebar pas dengan teks
+    var BY = photoY + Math.round(photoH) + 20;
+    var BX = (S - BW) / 2;
+
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = '#0a0520';
+    roundRect(ctx,BX,BY,BW,BH,16); ctx.fill();
+    ctx.restore();
+
+    var bGrad = ctx.createLinearGradient(BX,BY,BX+BW,BY+BH);
+    bGrad.addColorStop(0,'#c084fc'); bGrad.addColorStop(1,'#f472b6');
+    ctx.strokeStyle=bGrad; ctx.lineWidth=6;
+    roundRect(ctx,BX,BY,BW,BH,16); ctx.stroke();
+
+    ctx.fillStyle=hargaColor;
+    var fontSize=HARGA_FONT;
+    ctx.font='bold '+fontSize+'px Arial';
+    while(ctx.measureText(harga).width<BW-60&&fontSize<200){fontSize+=4;ctx.font='bold '+fontSize+'px Arial';}
+    while(ctx.measureText(harga).width>BW-40&&fontSize>40){fontSize-=2;ctx.font='bold '+fontSize+'px Arial';}
+    ctx.textAlign='center';
+    ctx.shadowColor='rgba(0,0,0,0.4)'; ctx.shadowBlur=8;
+    var textY = BY + (BH+fontSize)/2 - 10; ctx.fillText(harga, S/2, textY);
+    ctx.shadowBlur=0;
+
+    // Footer
+    var FY = BY + BH + 36;
+
+    // WA
+    ctx.beginPath(); ctx.arc(88,FY+30,36,0,Math.PI*2);
+    ctx.fillStyle='#25D366'; ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 28px Arial'; ctx.textAlign='center';
+    ctx.fillText('WA',88,FY+40);
+    ctx.font='bold 40px Arial'; ctx.fillStyle='#fff'; ctx.textAlign='left';
+    ctx.shadowColor='rgba(0,0,0,0.3)'; ctx.shadowBlur=6;
+    ctx.fillText(wa,136,FY+44); ctx.shadowBlur=0;
+
+    // IG
+    ctx.beginPath(); ctx.arc(S-88,FY+30,36,0,Math.PI*2);
+    var igG=ctx.createRadialGradient(S-88,FY+10,2,S-88,FY+30,36);
+    igG.addColorStop(0,'#f58529'); igG.addColorStop(0.5,'#dd2a7b'); igG.addColorStop(1,'#8134af');
+    ctx.fillStyle=igG; ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 28px Arial'; ctx.textAlign='center';
+    ctx.fillText('IG',S-88,FY+40);
+    ctx.font='bold 40px Arial'; ctx.fillStyle='#fff'; ctx.textAlign='right';
+    ctx.shadowColor='rgba(0,0,0,0.3)'; ctx.shadowBlur=6;
+    ctx.fillText(ig,S-136,FY+44); ctx.shadowBlur=0;
+
+    // Swipe — pojok kanan bawah canvas, tidak overlap IG
+    var SWW=220,SWH=62;
+    var SWX=(S-SWW)/2, SWY=FY+90;
+    ctx.fillStyle='rgba(255,255,255,0.93)';
+    roundRect(ctx,SWX,SWY,SWW,SWH,31); ctx.fill();
+    ctx.fillStyle='#1a2060'; ctx.font='bold 34px Arial'; ctx.textAlign='center';
+    ctx.fillText('Swipe \u2192',SWX+SWW/2,SWY+43);
+
+    canvas.style.display='block';
+    document.getElementById('dl-tmpl').style.display='block';
+    showToast('Template siap! Tap download.');
+  }
+</script>
+</body>
+</html>
