@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LUUNASTORE - Link Hub</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0a15;
+      min-height: 100vh;
+      padding: 0 0 50px;
+      color: #fff;
+    }
+
+    /* BG animated */
+    .bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: linear-gradient(135deg, #0d1b4b, #1a0a3e, #0a1a3e);
+      overflow: hidden;
+    }
+    .bg::before {
+      content: '';
+      position: absolute; width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(124,58,237,.3), transparent 70%);
+      top: -100px; right: -100px; border-radius: 50%;
+      animation: pulse 4s ease-in-out infinite;
+    }
+    .bg::after {
+      content: '';
+      position: absolute; width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(59,130,246,.2), transparent 70%);
+      bottom: -80px; left: -80px; border-radius: 50%;
+      animation: pulse 4s ease-in-out infinite reverse;
+    }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:.7} 50%{transform:scale(1.1);opacity:1} }
+
+    .content { position: relative; z-index: 1; max-width: 420px; margin: 0 auto; padding: 40px 20px; }
+
+    /* PROFILE */
+    .profile { text-align: center; margin-bottom: 32px; }
+    .avatar {
+      width: 90px; height: 90px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #3b82f6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 38px; margin: 0 auto 14px;
+      box-shadow: 0 0 0 4px rgba(124,58,237,.3), 0 0 30px rgba(124,58,237,.4);
+    }
+    .store-name {
+      font-size: 26px; font-weight: 900; letter-spacing: 1px;
+      background: linear-gradient(135deg, #c4b5fd, #93c5fd);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .store-tagline { font-size: 13px; color: #64748b; margin-top: 4px; }
+
+    /* BADGE */
+    .badges { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+    .badge {
+      padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+      border: 1px solid;
+    }
+    .badge.trusted { background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.3); color: #34d399; }
+    .badge.active  { background: rgba(59,130,246,.1); border-color: rgba(59,130,246,.3); color: #60a5fa; }
+
+    /* SECTION */
+    .sec-label {
+      font-size: 10px; font-weight: 800; letter-spacing: 2px;
+      text-transform: uppercase; color: #4a4a7a;
+      margin: 24px 0 12px; text-align: center;
+    }
+
+    /* LINK CARD */
+    .link-card {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px; padding: 16px 18px;
+      text-decoration: none; color: #fff;
+      margin-bottom: 10px;
+      transition: all .25s;
+      cursor: pointer;
+    }
+    .link-card:hover, .link-card:active {
+      background: rgba(255,255,255,.09);
+      border-color: rgba(255,255,255,.18);
+      transform: translateY(-2px);
+    }
+    .link-icon {
+      width: 46px; height: 46px; border-radius: 12px;
+      display: grid; place-items: center; font-size: 22px;
+      flex-shrink: 0;
+    }
+    .link-icon.wa    { background: linear-gradient(135deg,#25D366,#128C7E); }
+    .link-icon.wa2   { background: linear-gradient(135deg,#34d399,#059669); }
+    .link-icon.wa3   { background: linear-gradient(135deg,#6ee7b7,#10b981); }
+    .link-icon.wa4   { background: linear-gradient(135deg,#a7f3d0,#34d399); }
+    .link-icon.fb    { background: linear-gradient(135deg,#1877f2,#0d5dbf); }
+    .link-icon.pay   { background: linear-gradient(135deg,#7c3aed,#4f46e5); }
+    .link-icon.phone { background: linear-gradient(135deg,#f59e0b,#d97706); }
+    .link-text { flex: 1; }
+    .link-title { font-size: 14px; font-weight: 700; }
+    .link-sub   { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .link-arrow { color: #4a4a7a; font-size: 18px; }
+
+    /* FOOTER */
+    .footer { text-align: center; margin-top: 32px; font-size: 11px; color: #2a2a4a; }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #22c55e; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 13px; transition: transform .3s; z-index: 999; white-space: nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="content">
+
+  <!-- PROFILE -->
+  <div class="profile">
+    <div class="avatar">🛒</div>
+    <div class="store-name">LUUNASTORE</div>
+    <div class="store-tagline">Trusted store spesialis jual beli akun game</div>
+    <div class="badges">
+      <span class="badge trusted">✅ Trusted</span>
+      <span class="badge active">🟢 Active</span>
+    </div>
+  </div>
+
+  <!-- KONTAK -->
+  <div class="sec-label">📞 Kontak Admin</div>
+
+  <a class="link-card" href="https://wa.me/6282123154354">
+    <div class="link-icon phone">📱</div>
+    <div class="link-text">
+      <div class="link-title">WhatsApp Admin</div>
+      <div class="link-sub">082123154354 • Chat langsung</div>
+    </div>
+    <span class="link-arrow">›</span>
+  </a>
+
+  <a class="link-card" href="https://www.facebook.com/rekberpujiyanto" target="_blank">
+    <div class="link-icon fb">📘</div>
+    <div class="link-text">
+      <div class="link-title">Facebook</div>
+      <div class="link-sub">rekberpujiyanto</div>
+    </div>
+    <span class="link-arrow">›</span>
+  </a>
+
+  <!-- GRUP WA -->
+  <div class="sec-label">💬 Grup WhatsApp</div>
+
+  <a class="link-card" href="https://chat.whatsapp.com/DzsoVgj12MVAWOs3xlHtFM?mode=hqrt3" target="_blank">
+    <div class="link-icon wa">💬</div>
+    <div class="link-text">
+      <div class="link-title">Jual Beli BA, GI, HI, HSR, ZZ</div>
+      <div class="link-sub">Grup game hoyo & lainnya</div>
+    </div>
+    <span class="link-arrow">›</span>
+  </a>
+
+  <a class="link-card" href="https://chat.whatsapp.com/BruPPaycZb24ZZ0oYhUiAR?mode=hqrt3" target="_blank">
+    <div class="link-icon wa2">💬</div>
+    <div class="link-text">
+      <div class="link-title">Jual Beli All Game</div>
+      <div class="link-sub">Semua jenis game</div>
+    </div>
+    <span class="link-arrow">›</span>
+  </a>
+
+  <a class="link-card" href="https://chat.whatsapp.com/LCHpbVCiyQi6iSSu6jGMja" target="_blank">
+    <div class="link-icon wa3">💬</div>
+    <div class="link-text">
+      <div class="link-title">Grup Aplikasi Premium</div>
+      <div class="link-sub">Akun aplikasi premium</div>
+    </div>
+    <span class="link-arrow">›</span>
+  </a>
+
+  <a class="link-card" href="https://chat.whatsapp.com/BQMOmbaNoPZHm5UAgf7sHM" target="_blank">
+    <div class="link-icon wa4">🏠</div>
+    <div class="link-text">
+      <div class="link-title">Komunitas Luunastore</div>
+      <div class="link-sub">Komunitas resmi LUUNASTORE</div>
+    </div>
+    <span class="link-arrow">›</span>
+  </a>
+
+  <!-- PEMBAYARAN -->
+  <div class="sec-label">💳 Pembayaran</div>
+
+  <div class="link-card" onclick="window.open('https://rezeralp-cyber.github.io/Payment/index.html','_blank')">
+    <div class="link-icon pay">💳</div>
+    <div class="link-text">
+      <div class="link-title">Halaman Pembayaran</div>
+      <div class="link-sub">DANA • GoPay • OVO • ShopeePay • SeaBank • QRIS</div>
+    </div>
+    <span class="link-arrow">›</span>
+  </a>
+
+  <div class="footer">
+    © 2025 LUUNASTORE • Semua transaksi aman & terpercaya
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 2000);
+  }
+</script>
+</body>
+</html>
